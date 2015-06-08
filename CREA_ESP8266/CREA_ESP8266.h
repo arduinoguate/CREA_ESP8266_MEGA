@@ -8,6 +8,7 @@
 #include <Arduino.h>
 #endif
 
+
 #define DEST_HOST   "crea.arduinogt.com"
 #define PORT		"9000"
 #define DEST_IP     "45.55.134.101"
@@ -36,7 +37,6 @@
 #define ERR_3			  5
 #define ERR_4			  6
 
-
 class CREA_ESP8266
 {
 	typedef void (*GeneralMessageFunction) (String value);
@@ -44,9 +44,9 @@ public:
 	void CREA_setup(String _SSID, String _PASS, const char* _MODULEID, const char* _AUTH);
 	boolean execute(String order);
 	void CREA_loop(GeneralMessageFunction callback);
-	void set_response(char* message);
-	char* concat_char(const char* a, const char* b);
-	int digital_data;
+	void setResponse(char* message);
+	char* concatChar(const char* a, const char* b);
+	int digitalData;
 	String value;
 	String command;
 	int ref;

@@ -22,14 +22,14 @@ void handle_command(String command)
 {
   if (modulo.execute(command)){
     if (modulo.command == "DO"){
-        modulo.set_response("OK");
+        modulo.setResponse("OK");
     }else if( modulo.command == "AO" ){
-        modulo.set_response("OK");
+        modulo.setResponse("OK");
     }else if( modulo.command == "SR" ){
-        modulo.set_response(modulo.concat_char("PROCESO: ",modulo.value.c_str()));
+        modulo.setResponse(modulo.concatChar("PROCESO: ",modulo.value.c_str()));
     }else if( modulo.command == "ST" ){
         Serial.println("STATUS REQUEST");
-        modulo.set_response("RETORNO+DE+STATUS");
+        modulo.setResponse("RETORNO+DE+STATUS");
     }
   }
 }

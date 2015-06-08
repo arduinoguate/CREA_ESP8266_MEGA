@@ -217,10 +217,10 @@ boolean CREA_ESP8266::execute(String order){
         analogWrite(ref, value.toInt());
         return true;
     }else if( command == "DI" ){
-        digital_data = digitalRead(ref);
+        digitalData = digitalRead(ref);
         return true;
     }else if( command == "AI" ){
-        digital_data = analogRead(ref);
+        digitalData = analogRead(ref);
         return true;
     }else if( command == "SR"){
         return true;
@@ -233,12 +233,12 @@ boolean CREA_ESP8266::execute(String order){
   }
 }
 
-void CREA_ESP8266::set_response(char* message){
+void CREA_ESP8266::setResponse(char* message){
   CALL_RESP = message;
   executed = true;
 }
 
-char* CREA_ESP8266::concat_char(const char* a, const char* b){
+char* CREA_ESP8266::concatChar(const char* a, const char* b){
   char* to_return;
   int len = strlen(a) + strlen(b) + 1;
   to_return = (char*)malloc( len );
@@ -304,13 +304,13 @@ void CREA_ESP8266::CREA_loop(GeneralMessageFunction callback){
     //PSEUDO State Machine
     switch (stage){
       case AUTHENTICATING:
-        echoMessage(concat_char("CRAUTH|", AUTH), "OK", CONTINUE);
+        echoMessage(concatChar("CRAUTH|", AUTH), "OK", CONTINUE);
         next_stage = SUBSCRIBING;
         ack = "ACK";
         CALL_RESP = "";
         break;
       case SUBSCRIBING:
-        echoMessage(concat_char("SUBSCR|", MODULEID), "OK", CONTINUE);
+        echoMessage(concatChar("SUBSCR|", MODULEID), "OK", CONTINUE);
         next_stage = OPERATION;
         ack = "ACK";
         break;
@@ -318,7 +318,7 @@ void CREA_ESP8266::CREA_loop(GeneralMessageFunction callback){
         if (!executed){
           echoMessage("GET", "OK", CONTINUE);
         }else{
-          echoMessage(concat_char("SEND|", CALL_RESP), "OK", CONTINUE);
+          echoMessage(concatChar("SEND|", CALL_RESP), "OK", CONTINUE);
           executed = false;
         }
         ack = "OK";
