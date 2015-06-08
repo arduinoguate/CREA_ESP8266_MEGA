@@ -8,21 +8,45 @@
 #include <Arduino.h>
 #endif
 
-#define DEST_HOST   "api.arduinogt.com"
-#define DEST_IP     "97.74.215.186"
+#define DEST_HOST   "crea.arduinogt.com"
+#define PORT		"9000"
+#define DEST_IP     "45.55.134.101"
 #define TIMEOUT     5000 // mS
 #define CONTINUE    false
 #define HALT        true
 #define INPUT_SIZE  30
 
+#define WS_FIN            0x80
+#define WS_OPCODE_TEXT    0x1
+#define WS_OPCODE_BINARY  0x2
+#define WS_OPCODE_CLOSE   0x08
+#define WS_OPCODE_PING    0x09
+#define WS_OPCODE_PONG    0x0a
+// Second byte
+#define WS_MASK           0x80
+#define WS_SIZE16         126
+#define WS_SIZE64         127
+
+//CREA STAGES
+#define AUTHENTICATING	  0
+#define SUBSCRIBING		  1
+#define OPERATION		  2
+#define ERR_1			  3
+#define ERR_2			  4
+#define ERR_3			  5
+#define ERR_4			  6
+
+
 class CREA_ESP8266
 {
 	typedef void (*GeneralMessageFunction) (String value);
 public:
-	void CREA_setup(String _SSID, String _PASS, String _MODULEID, String _AUTH);
+	void CREA_setup(String _SSID, String _PASS, const char* _MODULEID, const char* _AUTH);
 	boolean execute(String order);
 	void CREA_loop(GeneralMessageFunction callback);
-	void set_response(String message);
+	void set_response(char* message);
+	char* concat_char(const char* a, const char* b);
+	int digital_data;
 	String value;
 	String command;
 	int ref;
@@ -32,15 +56,17 @@ private:
 	boolean echoFind(String keyword);
 	void echoFlush();
 	void echoSkip();
+	boolean echoMessage(char *cmd, String ack, boolean halt_on_fail);
 	boolean echoCommand(String cmd, String ack, boolean halt_on_fail);
 	boolean connectWiFi();
 
 	String response;
 	String SSID;
 	String PASS;
-	String MODULEID;
-	String AUTH;
-	String CALL_RESP;
+	const char* MODULEID;
+	const char* AUTH;
+	char* CALL_RESP;
+	boolean executed;
 };
 
 #endif
