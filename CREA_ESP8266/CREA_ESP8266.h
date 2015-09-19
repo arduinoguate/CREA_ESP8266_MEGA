@@ -54,6 +54,7 @@ public:
 	String value;
 	String command;
 	int ref;
+	int stage;
 
 private:
 	void errorHalt(String msg);
@@ -71,7 +72,6 @@ private:
 	const char* AUTH;
 	char* CALL_RESP;
 	boolean executed;
-	int stage;
 	int next_stage;
 	int wait_screen;
 };
