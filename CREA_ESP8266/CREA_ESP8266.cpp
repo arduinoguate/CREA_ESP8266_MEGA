@@ -269,6 +269,7 @@ void CREA_ESP8266::CREA_loop(GeneralMessageFunction callback){
   if (stage == STARTED){
     stage = AUTHENTICATING; //THE STAGE OF THE OPERATION:
     wait_screen = TIMEOUT;
+    executed = false;
   }
 
   //1: authenticating (with token)
@@ -281,7 +282,6 @@ void CREA_ESP8266::CREA_loop(GeneralMessageFunction callback){
     String cmd = "AT+CIPSTART=0,\"TCP\",\""; cmd += DEST_IP; cmd += "\",9000";
     // Loop forever echoing data received from destination server.
     boolean completed = false;
-    executed = false;
 
     if (stage == AUTHENTICATING){
       // Establish TCP connection
