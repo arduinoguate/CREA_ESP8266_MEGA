@@ -47,6 +47,7 @@ public:
 	void setResponse(char* message);
 	void setResponse(int value);
 	char* concatChar(const char* a, const char* b);
+	char* concatInt(char* a, int b);
 	int digitalData;
 	String value;
 	String command;

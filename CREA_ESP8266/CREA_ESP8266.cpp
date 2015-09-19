@@ -253,6 +253,11 @@ char* CREA_ESP8266::concatChar(const char* a, const char* b){
   return to_return;
 }
 
+char* CREA_ESP8266::concatInt(char* a, int b){
+  sprintf(a, "%d", b);
+  return a;
+}
+
 void CREA_ESP8266::CREA_loop(GeneralMessageFunction callback){
   int stage = AUTHENTICATING; //THE STAGE OF THE OPERATION:
   //1: authenticating (with token)
