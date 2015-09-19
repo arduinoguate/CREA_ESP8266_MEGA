@@ -157,15 +157,20 @@ boolean CREA_ESP8266::connectWiFi()
   }
 }
 
-
 void CREA_ESP8266::CREA_setup(String _SSID, String _PASS, const char* _MODULEID, const char* _AUTH){
+  CREA_setup(_SSID, _PASS, _MODULEID, _AUTH, 0);
+}
+
+void CREA_ESP8266::CREA_setup(String _SSID, String _PASS, const char* _MODULEID, const char* _AUTH, int baudrate){
   SSID = _SSID;
   PASS = _PASS;
   MODULEID = _MODULEID;
   AUTH = _AUTH;
 
-  Serial.begin(115200);         // Communication with PC monitor via USB
-  Serial1.begin(115200);        // Communication with ESP8266 via 5V/3.3V level shifter
+  if (baudrate == 0)
+    baudrate = 115200;
+  Serial.begin(baudrate);         // Communication with PC monitor via USB
+  Serial1.begin(baudrate);        // Communication with ESP8266 via 5V/3.3V level shifter
 
   Serial1.setTimeout(TIMEOUT);
   Serial.println("CREA ESP8266");

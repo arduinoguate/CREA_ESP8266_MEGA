@@ -42,6 +42,7 @@ class CREA_ESP8266
 	typedef void (*GeneralMessageFunction) (String value);
 public:
 	void CREA_setup(String _SSID, String _PASS, const char* _MODULEID, const char* _AUTH);
+	void CREA_setup(String _SSID, String _PASS, const char* _MODULEID, const char* _AUTH, int baudrate);
 	boolean execute(String order);
 	void CREA_loop(GeneralMessageFunction callback);
 	void setResponse(char* message);
