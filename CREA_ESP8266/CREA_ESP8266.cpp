@@ -163,6 +163,8 @@ void CREA_ESP8266::CREA_setup(String _SSID, String _PASS, const char* _MODULEID,
   PASS = _PASS;
   MODULEID = _MODULEID;
   AUTH = _AUTH;
+  stage = STARTED;
+  wait_screen = 0;
 
   Serial.begin(115200);         // Communication with PC monitor via USB
   Serial1.begin(115200);        // Communication with ESP8266 via 5V/3.3V level shifter
@@ -254,110 +256,122 @@ char* CREA_ESP8266::concatChar(const char* a, const char* b){
 }
 
 void CREA_ESP8266::CREA_loop(GeneralMessageFunction callback){
-  int stage = AUTHENTICATING; //THE STAGE OF THE OPERATION:
+  if (stage == STARTED){
+    stage = AUTHENTICATING; //THE STAGE OF THE OPERATION:
+    wait_screen = TIMEOUT;
+  }
+
   //1: authenticating (with token)
   //2: subscribing the module
   //3: operation
   //4: error
-  int next_stage;
+  if (wait_screen == TIMEOUT){
+    wait_screen = 0;
+    String ack = "NEL";
+    String cmd = "AT+CIPSTART=0,\"TCP\",\""; cmd += DEST_IP; cmd += "\",9000";
+    // Loop forever echoing data received from destination server.
+    boolean completed = false;
+    executed = false;
 
-  // Establish TCP connection
-  String ack = "NEL";
-  String cmd = "AT+CIPSTART=0,\"TCP\",\""; cmd += DEST_IP; cmd += "\",9000";
-  if (!echoCommand(cmd, "OK", CONTINUE)) { echoCommand("AT+CIPCLOSE=0", "", CONTINUE); return;}
-  delay(2000);
+    if (stage == AUTHENTICATING){
+      // Establish TCP connection
+      if (!echoCommand(cmd, "OK", CONTINUE)) { echoCommand("AT+CIPCLOSE=0", "", CONTINUE); return;}
+      delay(2000);
 
-  // Get connection status
-  if (!echoCommand("AT+CIPSTATUS", "OK", CONTINUE)) return;
+      // Get connection status
+      if (!echoCommand("AT+CIPSTATUS", "OK", CONTINUE)) return;
 
-  // Build WEBSOCKET request.
-  cmd = "GET /"; cmd += " HTTP/1.1\r\n";  cmd += "Upgrade: websocket\r\n"; cmd += "Connection: Upgrade\r\nSec-WebSocket-Key: "; cmd += "s3pPLMBiTxaQ9kYGzzhZRbK+xOo="; cmd += "\r\n"; cmd += "Host: "; cmd += DEST_HOST; cmd += ":"; cmd += PORT; cmd += "\r\nSec-WebSocket-Protocol: chat\r\nSec-WebSocket-Version: 13\r\n\r\n";
+      // Build WEBSOCKET request.
+      cmd = "GET /"; cmd += " HTTP/1.1\r\n";  cmd += "Upgrade: websocket\r\n"; cmd += "Connection: Upgrade\r\nSec-WebSocket-Key: "; cmd += "s3pPLMBiTxaQ9kYGzzhZRbK+xOo="; cmd += "\r\n"; cmd += "Host: "; cmd += DEST_HOST; cmd += ":"; cmd += PORT; cmd += "\r\nSec-WebSocket-Protocol: chat\r\nSec-WebSocket-Version: 13\r\n\r\n";
 
-  // Ready the module to receive raw data
-  if (!echoCommand("AT+CIPSEND=0,"+String(cmd.length()), ">", CONTINUE))
-  {
-    echoCommand("AT+CIPCLOSE", "", CONTINUE);
-    Serial.println("Connection timeout.");
-    return;
-  }
-
-  Serial.println("SUBSCRIBING");
-  // Send the raw HTTP request
-  echoCommand(cmd, "OK", CONTINUE);  // GET
-
-  // Loop forever echoing data received from destination server.
-  boolean completed = false;
-  executed = false;
-
-  while(!completed){
-    while (Serial1.available()){
-      char c = Serial1.read();
-      Serial.write(c);
-      response += c;
-      if (response.indexOf("OK") > 0){
-        completed = true;
-      }
-      if (c == '\r') { response = ""; Serial.print('\n'); };
-    }
-  }
-
-  delay(1000);
-
-  while (completed){
-
-    // Send the CREA commands
-    //PSEUDO State Machine
-    switch (stage){
-      case AUTHENTICATING:
-        echoMessage(concatChar("CRAUTH|", AUTH), "OK", CONTINUE);
-        next_stage = SUBSCRIBING;
-        ack = "ACK";
-        CALL_RESP = "";
-        break;
-      case SUBSCRIBING:
-        echoMessage(concatChar("SUBSCR|", MODULEID), "OK", CONTINUE);
-        next_stage = OPERATION;
-        ack = "ACK";
-        break;
-      case OPERATION:
-        if (!executed){
-          echoMessage("GET", "OK", CONTINUE);
-        }else{
-          echoMessage(concatChar("SEND|", CALL_RESP), "OK", CONTINUE);
-          executed = false;
-        }
-        ack = "OK";
-        break;
-      default:
-        next_stage = AUTHENTICATING;
-        break;
-    }
-
-    delay(TIMEOUT);
-
-    while (Serial1.available()){
-      char c = Serial1.read();
-      //Serial.write(c);
-      response += c;
-
-      //MOVES THE OPERATION STAGE
-      if (response.indexOf(ack) > 0){// && executed){
-        stage = next_stage;
+      // Ready the module to receive raw data
+      if (!echoCommand("AT+CIPSEND=0,"+String(cmd.length()), ">", CONTINUE))
+      {
+        echoCommand("AT+CIPCLOSE", "", CONTINUE);
+        Serial.println("Connection timeout.");
+        return;
       }
 
-      if (c == '\r') {
-        if (stage == OPERATION && !executed){
-          if (response.indexOf("IPD") > 0){
-            response = response.substring(response.indexOf(":")+3,response.length());
-            callback(response);
+      Serial.println("SUBSCRIBING");
+      // Send the raw HTTP request
+      echoCommand(cmd, "OK", CONTINUE);  // GET
+
+      while(!completed){
+        while (Serial1.available()){
+          char c = Serial1.read();
+          Serial.write(c);
+          response += c;
+          if (response.indexOf("OK") > 0){
+            completed = true;
           }
+          if (c == '\r') { response = ""; Serial.print('\n'); };
         }
-        response = ""; Serial.print('\n');
-      };
-    }
+      }
+    }else
+      completed = true;
 
-    //echoCommand("AT+CIPCLOSE=0", "", CONTINUE);
+    delay(1000);
+
+    while (completed){
+
+      // Send the CREA commands
+      //PSEUDO State Machine
+      switch (stage){
+        case AUTHENTICATING:
+          echoMessage(concatChar("CRAUTH|", AUTH), "OK", CONTINUE);
+          next_stage = SUBSCRIBING;
+          ack = "ACK";
+          CALL_RESP = "";
+          break;
+        case SUBSCRIBING:
+          echoMessage(concatChar("SUBSCR|", MODULEID), "OK", CONTINUE);
+          next_stage = OPERATION;
+          ack = "ACK";
+          break;
+        case OPERATION:
+          if (!executed){
+            echoMessage("GET", "OK", CONTINUE);
+          }else{
+            echoMessage(concatChar("SEND|", CALL_RESP), "OK", CONTINUE);
+            executed = false;
+          }
+          completed = false;
+          ack = "OK";
+          break;
+        default:
+          next_stage = AUTHENTICATING;
+          break;
+      }
+
+      delay(TIMEOUT);
+
+      while (Serial1.available()){
+        char c = Serial1.read();
+        //Serial.write(c);
+        response += c;
+
+        //MOVES THE OPERATION STAGE
+        if (response.indexOf(ack) > 0){// && executed){
+          stage = next_stage;
+        }
+
+        if (c == '\r') {
+          if (stage == OPERATION && !executed){
+            if (response.indexOf("IPD") > 0){
+              response = response.substring(response.indexOf(":")+3,response.length());
+              callback(response);
+            }
+          }
+          response = ""; Serial.print('\n');
+        };
+      }
+
+      //echoCommand("AT+CIPCLOSE=0", "", CONTINUE);
+    }
+    if (stage != OPERATION)
+      delay(TIMEOUT);
+  }else{
+    wait_screen++;
   }
-  delay(TIMEOUT);
 
 }

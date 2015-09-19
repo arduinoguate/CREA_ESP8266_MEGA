@@ -29,9 +29,10 @@
 #define WS_SIZE64         127
 
 //CREA STAGES
-#define AUTHENTICATING	  0
-#define SUBSCRIBING		  1
-#define OPERATION		  2
+#define STARTED			  0
+#define AUTHENTICATING	  1
+#define SUBSCRIBING		  2
+#define OPERATION		  3
 #define ERR_1			  3
 #define ERR_2			  4
 #define ERR_3			  5
@@ -68,6 +69,9 @@ private:
 	const char* AUTH;
 	char* CALL_RESP;
 	boolean executed;
+	int stage;
+	int next_stage;
+	int wait_screen;
 };
 
 #endif
