@@ -45,6 +45,7 @@ public:
 	boolean execute(String order);
 	void CREA_loop(GeneralMessageFunction callback);
 	void setResponse(char* message);
+	void setResponse(int value);
 	char* concatChar(const char* a, const char* b);
 	int digitalData;
 	String value;

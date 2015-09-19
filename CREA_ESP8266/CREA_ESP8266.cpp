@@ -238,6 +238,11 @@ void CREA_ESP8266::setResponse(char* message){
   executed = true;
 }
 
+void CREA_ESP8266::setResponse(int value){
+  sprintf(CALL_RESP, "%d", value);
+  executed = true;
+}
+
 char* CREA_ESP8266::concatChar(const char* a, const char* b){
   char* to_return;
   int len = strlen(a) + strlen(b) + 1;
