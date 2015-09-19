@@ -157,8 +157,11 @@ boolean CREA_ESP8266::connectWiFi()
   }
 }
 
-
 void CREA_ESP8266::CREA_setup(String _SSID, String _PASS, const char* _MODULEID, const char* _AUTH){
+  CREA_setup(_SSID, _PASS, _MODULEID, _AUTH, 0);
+}
+
+void CREA_ESP8266::CREA_setup(String _SSID, String _PASS, const char* _MODULEID, const char* _AUTH, int baudrate){
   SSID = _SSID;
   PASS = _PASS;
   MODULEID = _MODULEID;
@@ -166,8 +169,10 @@ void CREA_ESP8266::CREA_setup(String _SSID, String _PASS, const char* _MODULEID,
   stage = STARTED;
   wait_screen = 0;
 
-  Serial.begin(115200);         // Communication with PC monitor via USB
-  Serial1.begin(115200);        // Communication with ESP8266 via 5V/3.3V level shifter
+  if (baudrate == 0)
+    baudrate = 115200;
+  Serial.begin(baudrate);         // Communication with PC monitor via USB
+  Serial1.begin(baudrate);        // Communication with ESP8266 via 5V/3.3V level shifter
 
   Serial1.setTimeout(TIMEOUT);
   Serial.println("CREA ESP8266");
@@ -253,6 +258,11 @@ char* CREA_ESP8266::concatChar(const char* a, const char* b){
   strcat(to_return, b); /* add the extension */
 
   return to_return;
+}
+
+char* CREA_ESP8266::concatInt(char* a, int b){
+  sprintf(a, "%d", b);
+  return a;
 }
 
 void CREA_ESP8266::CREA_loop(GeneralMessageFunction callback){
