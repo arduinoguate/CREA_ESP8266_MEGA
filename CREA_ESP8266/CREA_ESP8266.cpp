@@ -1,3 +1,7 @@
+// Simple Base64 code
+// (c) Copyright 2010 MCQN Ltd.
+// Released under Apache License, version 2.0
+
 #include "CREA_ESP8266.h"
 
 void CREA_ESP8266::errorHalt(String msg)
@@ -165,10 +169,11 @@ void CREA_ESP8266::CREA_setup(String _SSID, String _PASS, const char* _MODULEID,
   stage = STARTED;
   wait_screen = 0;
 
-  if (baudrate == 0)
-    baudrate = 115200;
-  Serial.begin(baudrate);         // Communication with PC monitor via USB
-  Serial1.begin(baudrate);        // Communication with ESP8266 via 5V/3.3V level shifter
+  long bd = baudrate;
+  if (bd == 0)
+    bd = 115200;
+  Serial.begin(bd);         // Communication with PC monitor via USB
+  Serial1.begin(bd);        // Communication with ESP8266 via 5V/3.3V level shifter
 
   Serial1.setTimeout(TIMEOUT);
   Serial.println("CREA ESP8266");
@@ -207,11 +212,9 @@ boolean CREA_ESP8266::execute(String order){
   order.trim();
   if (order != "NA"){
     command = order.substring(0,2);
-    ref = order.substring(3,order.indexOf(",")).toInt();
-    action_id = order.substring(order.indexOf(",")+1,order.indexOf("|")).toInt();
+    ref = order.substring(3,order.indexOf("|")).toInt();
     value = order.substring(order.indexOf("|")+1,order.length());
     if (command == "DO"){
-        pinMode(ref,OUTPUT);
         int v = value.toInt();
         if (v <= 0){
             digitalWrite(ref, LOW);
@@ -219,11 +222,9 @@ boolean CREA_ESP8266::execute(String order){
         digitalWrite(ref, v);
         return true;
     }else if( command == "AO" ){
-        pinMode(ref,OUTPUT);
         analogWrite(ref, value.toInt());
         return true;
     }else if( command == "DI" ){
-        pinMode(ref,INPUT);
         digitalData = digitalRead(ref);
         return true;
     }else if( command == "AI" ){
@@ -241,14 +242,12 @@ boolean CREA_ESP8266::execute(String order){
 }
 
 void CREA_ESP8266::setResponse(char* message){
-
-  sprintf(CALL_RESP, "%d|%s", action_id, message);
+  CALL_RESP = message;
   executed = true;
 }
 
 void CREA_ESP8266::setResponse(int value){
-
-  sprintf(CALL_RESP, "%d|%d", action_id, value);
+  sprintf(CALL_RESP, "%d", value);
   executed = true;
 }
 
@@ -271,6 +270,7 @@ void CREA_ESP8266::CREA_loop(GeneralMessageFunction callback){
   if (stage == STARTED){
     stage = AUTHENTICATING; //THE STAGE OF THE OPERATION:
     wait_screen = TIMEOUT;
+    executed = false;
   }
 
   //1: authenticating (with token)
@@ -283,7 +283,6 @@ void CREA_ESP8266::CREA_loop(GeneralMessageFunction callback){
     String cmd = "AT+CIPSTART=0,\"TCP\",\""; cmd += DEST_IP; cmd += "\",9000";
     // Loop forever echoing data received from destination server.
     boolean completed = false;
-    executed = false;
 
     if (stage == AUTHENTICATING){
       // Establish TCP connection
@@ -306,7 +305,7 @@ void CREA_ESP8266::CREA_loop(GeneralMessageFunction callback){
 
       Serial.println("SUBSCRIBING");
       // Send the raw HTTP request
-      echoCommand(cmd, "OK", CONTINUE);  // GET
+      echoCommand(cmd, "", CONTINUE);  // GET
 
       while(!completed){
         while (Serial1.available()){

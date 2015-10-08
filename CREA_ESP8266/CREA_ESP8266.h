@@ -12,7 +12,7 @@
 #define DEST_HOST   "crea.arduinogt.com"
 #define PORT		"9000"
 #define DEST_IP     "45.55.134.101"
-#define TIMEOUT     5000 // mS
+#define TIMEOUT     3000 // mS
 #define CONTINUE    false
 #define HALT        true
 #define INPUT_SIZE  30
@@ -74,7 +74,6 @@ private:
 	int stage;
 	int next_stage;
 	int wait_screen;
-	long action_id;
 };
 
 #endif
